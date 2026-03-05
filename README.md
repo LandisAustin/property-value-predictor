@@ -1,2 +1,1 @@
-CS 431 Project
-ML Property Value Predictor
+CS 431 Semester Project - ML Property Value Predictor
