@@ -182,4 +182,8 @@ print("\nNull Counts: \n",null_counts[null_counts > 0])
 #   NOTE: IF ENCODED & NOT DROPPED... remember to take care of NULLs
 
 # NOTE: Check descriptions of non-dropped features to ensure outliers and potential errors are managed
+
 # NOTE: Unitcnt is clipped to 10, but that is arbitrary and could be adjusted later
+
+df_clean.to_csv("zillow-data/properties_2016_cleaned.csv", index=False)
+print("Cleaned dataset saved to zillow-data/properties_2016_cleaned.csv")
