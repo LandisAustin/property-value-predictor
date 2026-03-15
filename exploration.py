@@ -43,8 +43,8 @@ df_clean = df_clean.drop(columns=["parcelid"])  # Remove from features
 # Select potential categorical columns
 categorical_cols = ['regionidzip', 'regionidcity', 'propertylandusetypeid', 'regionidneighborhood', 'censustractandblock']
 # Check # of unique values to see if one-hot encoding is feasible
-for col in categorical_cols:
-    print(f"{col}: {df_clean[col].nunique()} unique values")
+#for col in categorical_cols:
+#    print(f"{col}: {df_clean[col].nunique()} unique values")
 
 # NOTE: Reference when considering one-hot encoding
 """
@@ -156,8 +156,27 @@ df_clean['unitcnt'] = df_clean['unitcnt'].fillna(1)
 df_clean['unitcnt'] = df_clean['unitcnt'].clip(upper=10)
 # NOTE: Clip could be adjusted later, 10 is arbitrary
 
+# HEATING SYSTEM STUFF
+#print(df_clean['heatingorsystemtypeid'].describe())
+# How many unique values? One-hot feasible? YES (14 unique values)
+#print(df_clean['heatingorsystemtypeid'].nunique())
+#print(df_clean['heatingorsystemtypeid'].value_counts())
+
 # Fill heatingsystem NULLs with (new) category 0
+# This is better than imputing with potentially incorrect information
 df_clean['heatingorsystemtypeid'] = df_clean['heatingorsystemtypeid'].fillna(0)
+
+# One-hot encode new category columns (ex: heating_2)
+# drop_firt drops one of these columns to act as a 'baseline'
+# This is only important for linear regression because otherwise there is multicollinearity where each column is dependent on the others
+# This freaks linear regression out due to its linear algebra and solving matrix inverses
+df_clean = pd.get_dummies(
+    df_clean,
+    columns=['heatingorsystemtypeid'],
+    prefix='heating',
+    drop_first=True, # Could change to false for any model that isn't linear regression, but will still work with any other model
+    dtype=int
+)
 # NOTE: Maybe come back to this, has > 1.1mil NULLs that are being set
 
 print(clean_shape, " -> ", df_clean.shape)
@@ -165,6 +184,8 @@ clean_shape = df_clean.shape
 
 null_counts = df_clean.isnull().sum()
 print("\nNull Counts: \n",null_counts[null_counts > 0])
+
+print(df_clean.columns)
 
 # FINAL NOTES TL;DR
 # NOTE: ALL NULLS SHOULD BE ACCOUNTED FOR WITH CURRENT CLEANING
@@ -182,8 +203,13 @@ print("\nNull Counts: \n",null_counts[null_counts > 0])
 #   NOTE: IF ENCODED & NOT DROPPED... remember to take care of NULLs
 
 # NOTE: Check descriptions of non-dropped features to ensure outliers and potential errors are managed
-
 # NOTE: Unitcnt is clipped to 10, but that is arbitrary and could be adjusted later
 
-df_clean.to_csv("zillow-data/properties_2016_cleaned.csv", index=False)
-print("Cleaned dataset saved to zillow-data/properties_2016_cleaned.csv")
+# This feature is reversed in the dictionary: lower = better, higher = worse
+# Flip these values since it's directly opposite of how linear regression treats numeric values
+# The model could learn this negative slope on its own, or we could help it out and flip them
+max_quality = df_clean['buildingqualitytypeid'].max()
+df_clean['buildingqualitytypeid'] = max_quality - df_clean['buildingqualitytypeid'] + 1
+
+#df_clean.to_csv("zillow-data/properties_2016_cleaned.csv", index=False)
+#print("Cleaned dataset saved to zillow-data/properties_2016_cleaned.csv")
