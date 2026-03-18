@@ -34,11 +34,10 @@ shape = df_clean.shape
 
 # ===== Trivial & Useless Features ===== #
 df_clean = df_clean.drop(columns=[
-    "structuretaxvaluedollarcnt",  # Value of the structure
+    "structuretaxvaluedollarcnt",   # Value of the structure
     "landtaxvaluedollarcnt",        # Value of the land
     "taxamount",                    # Property tax amount
-    "assessmentyear",                # Not predictive
-    "propertyzoningdesc"            # Correlates to properzoningid
+    "propertyzoningdesc",           # Correlates to properzoningid
 ])
 print("Drop useless & trivial features")
 print(shape, " -> ", df_clean.shape)
@@ -91,7 +90,6 @@ df_clean['calculatedfinishedsquarefeet'] = df_clean['calculatedfinishedsquarefee
 df_clean['finishedsquarefeet12'] = df_clean['finishedsquarefeet12'].fillna(df_clean['finishedsquarefeet12'].median())
 df_clean['fullbathcnt'] = df_clean['fullbathcnt'].fillna(df_clean['fullbathcnt'].median())
 df_clean['roomcnt'] = df_clean['roomcnt'].fillna(df_clean['roomcnt'].median())
-df_clean['yearbuilt'] = df_clean['yearbuilt'].fillna(df_clean['yearbuilt'].median())
 df_clean['lotsizesquarefeet'] = df_clean['lotsizesquarefeet'].fillna(df_clean['lotsizesquarefeet'].median())
 df_clean['buildingqualitytypeid'] = df_clean['buildingqualitytypeid'].fillna(df_clean['buildingqualitytypeid'].median())
 print("Impute rows with NULL")
@@ -186,6 +184,23 @@ max_quality = df_clean['buildingqualitytypeid'].max()
 df_clean['buildingqualitytypeid'] = max_quality - df_clean['buildingqualitytypeid'] + 1
 print("Flip 'buildingqualitytypeid'")
 # ================================== #
+
+
+# ===== Property Age ===== #
+df_clean = df_clean.copy()
+df_clean.dropna(subset = ['yearbuilt'],inplace = True) # drop rows with NULL yearbuilt
+#df_clean['yearbuilt'] = df_clean['yearbuilt'].fillna(df_clean['yearbuilt'].median()) # Set yearbuilt to median if NULL
+df_clean['assessmentyear'] = df_clean['assessmentyear'].fillna(2016) # None with NULL, but just in case set year to year of dataset
+df_clean['property_age'] = df_clean['assessmentyear'] - df_clean['yearbuilt']
+df_clean['property_age'] = df_clean['property_age'].clip(lower=0) # None go negative, but just in case set lower bound to 0
+df_clean = df_clean.drop(columns=[
+    "assessmentyear",
+    "yearbuilt"
+]) # Drop because not needed anymore
+print("Add property_age, drop yearbuilt & assessmentyear")
+print(shape, " -> ", df_clean.shape)
+shape = df_clean.shape
+# ============================= #
 
 
 print("\n--=== Cleaning Complete ===--")
