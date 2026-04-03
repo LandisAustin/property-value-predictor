@@ -119,9 +119,9 @@ df_clean['property_age'] = df_clean['assessmentyear'] - df_clean['yearbuilt']
 df_clean['property_age'] = df_clean['property_age'].clip(lower=0)
 df_clean = df_clean.drop(columns=['assessmentyear', 'yearbuilt'])
 
-# ===== Remove Outliers ===== #
-#lower = df_clean['taxvaluedollarcnt'].quantile(0.01)
-upper = df_clean['taxvaluedollarcnt'].quantile(0.99)
+# ===== Remove Outliers ===== # 
+lower = df_clean['taxvaluedollarcnt'].quantile(0.03) #Changing to top and bottom 3%
+upper = df_clean['taxvaluedollarcnt'].quantile(0.97)
 
 df_clean = df_clean[
     #(df_clean['taxvaluedollarcnt'] >= lower) &
