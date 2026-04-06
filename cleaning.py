@@ -1,9 +1,14 @@
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
+import numpy as np
 
 # ===== Read Data ===== #
-print("Reading data...")
-df = pd.read_csv("zillow-data/properties_2016.csv", low_memory=False)
+print("Reading 2016 data...")
+df1 = pd.read_csv("zillow-data/properties_2016.csv", low_memory=False)
+print("Reading 2017 data...")
+df2 = pd.read_csv("zillow-data/properties_2016.csv", low_memory=False)
+df = pd.concat([df1, df2], ignore_index=True)
 print("Data read complete")
 shape = df.shape
 print("Starting Shape:", shape)
@@ -120,11 +125,15 @@ df_clean['property_age'] = df_clean['property_age'].clip(lower=0)
 df_clean = df_clean.drop(columns=['assessmentyear', 'yearbuilt'])
 
 # ===== Remove Outliers ===== # 
-lower = df_clean['taxvaluedollarcnt'].quantile(0.03) #Changing to top and bottom 3%
-upper = df_clean['taxvaluedollarcnt'].quantile(0.97)
+p = 0.07
+lower = df_clean['taxvaluedollarcnt'].quantile(p)       # 8th percentile
+upper = df_clean['taxvaluedollarcnt'].quantile(1 - p)   # 92nd percentile
+
+df_trimmed = df_clean[(df_clean['taxvaluedollarcnt'] >= lower) &
+                      (df_clean['taxvaluedollarcnt'] <= upper)]
 
 df_clean = df_clean[
-    #(df_clean['taxvaluedollarcnt'] >= lower) &
+    (df_clean['taxvaluedollarcnt'] >= lower) &
     (df_clean['taxvaluedollarcnt'] <= upper)
 ]
 print("Remove Outliers")
@@ -135,6 +144,30 @@ shape = df_clean.shape
 for col in df_clean.columns:
     df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce')
 df_clean = df_clean.fillna(0)
+
+
+df_clean['sqft_per_room'] = df_clean['calculatedfinishedsquarefeet'] / df_clean['roomcnt']
+df_clean['lot_to_living_ratio'] = df_clean['lotsizesquarefeet'] / df_clean['calculatedfinishedsquarefeet']
+df_clean['bath_bed_ratio'] = df_clean['bathroomcnt'] / df_clean['bedroomcnt']
+df_clean['age_per_quality'] = df_clean['property_age'] / df_clean['buildingqualitytypeid']
+
+
+for col in ['sqft_per_room', 'lot_to_living_ratio', 'bath_bed_ratio', 'age_per_quality']:
+    df_clean[col] = df_clean[col].replace([np.inf, -np.inf], np.nan)
+    df_clean[col] = df_clean[col].fillna(0)
+
+# ----- Scale ----- #
+scaler = StandardScaler()
+numeric_cols = [
+    'basementsqft', 'bathroomcnt', 'bedroomcnt', 'buildingqualitytypeid',
+    'calculatedbathnbr', 'calculatedfinishedsquarefeet',
+    'finishedsquarefeet12', 'fireplacecnt', 'fullbathcnt',
+    'garagecarcnt', 'garagetotalsqft',
+    'lotsizesquarefeet', 'poolsizesum', 'roomcnt',
+    'threequarterbathnbr', 'unitcnt', 'numberofstories',
+    'property_age',
+    'sqft_per_room', 'lot_to_living_ratio', 'bath_bed_ratio'
+]
 
 # ===== Final Checks ===== #
 print("\n--=== Cleaning Complete ===--")
