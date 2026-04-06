@@ -5,10 +5,13 @@ import numpy as np
 
 # ===== Read Data ===== #
 print("Reading 2016 data...")
+"""
 df1 = pd.read_csv("zillow-data/properties_2016.csv", low_memory=False)
 print("Reading 2017 data...")
 df2 = pd.read_csv("zillow-data/properties_2016.csv", low_memory=False)
 df = pd.concat([df1, df2], ignore_index=True)
+"""
+df = pd.read_csv("zillow-data/properties_2016.csv", low_memory=False)
 print("Data read complete")
 shape = df.shape
 print("Starting Shape:", shape)
